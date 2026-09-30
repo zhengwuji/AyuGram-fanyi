@@ -1,0 +1,22 @@
+# 构建产物
+bin/
+obj/
+dist/
+publish/
+*.zip
+
+# 截图与图像（本地测试输出可能含聊天内容，一律不入库）
+*.png
+artifacts/
+
+# 日志
+*.log
+
+# IDE / 系统
+.vs/
+.vscode/
+.idea/
+*.user
+*.suo
+Thumbs.db
+Desktop.ini
