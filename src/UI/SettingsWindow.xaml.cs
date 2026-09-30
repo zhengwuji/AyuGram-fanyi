@@ -153,6 +153,7 @@ namespace AyuTranslate.UI
 
             ProxyAutoStartBox.IsChecked = c.ProxyAutoStart;
             ProxyFallbackBox.IsChecked = c.ProxyFallbackToGoogle;
+            OverlayEnabledBox.IsChecked = c.OverlayEnabled;
             ProxyPortBox.Text = c.ProxyPort.ToString(CultureInfo.InvariantCulture);
             PatchExeBox.Text = string.IsNullOrWhiteSpace(c.TargetExecutable)
                 ? "C:\\Program Files\\AyuGram\\AyuGram.exe"
@@ -371,6 +372,7 @@ namespace AyuTranslate.UI
             c.ProxyPort = ParseInt(ProxyPortBox.Text, c.ProxyPort);
             c.ProxyAutoStart = ProxyAutoStartBox.IsChecked == true;
             c.ProxyFallbackToGoogle = ProxyFallbackBox.IsChecked == true;
+            c.OverlayEnabled = OverlayEnabledBox.IsChecked == true;
             c.ProxyEnabled = ProxyManager.Instance.IsRunning;
             if (!string.IsNullOrWhiteSpace(PatchExeBox.Text))
                 c.TargetExecutable = PatchExeBox.Text.Trim();

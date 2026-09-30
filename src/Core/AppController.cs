@@ -184,6 +184,13 @@ namespace AyuTranslate.Core
         {
             try
             {
+                // 覆盖层翻译关闭时不做跟随 / 显隐，只保底收起残留的覆盖层
+                if (!_cfg.OverlayEnabled)
+                {
+                    if (_overlay.OverlayVisible) _overlay.HideOverlay();
+                    return;
+                }
+
                 if (_target == null || !_target.IsWindowAlive())
                 {
                     if (DateTime.UtcNow - _overlayAttachRetryUtc > TimeSpan.FromSeconds(2))
@@ -229,6 +236,7 @@ namespace AyuTranslate.Core
             // 自动热重载配置（设置窗口保存后立即生效）
             TryReloadConfig();
 
+            if (!_cfg.OverlayEnabled) return; // 覆盖层翻译已关闭（纯原生接管模式）
             if (!_autoMode || _busy) return;
 
             if (_target == null || !_target.IsWindowAlive())
@@ -321,6 +329,13 @@ namespace AyuTranslate.Core
         public async Task TranslateOnceAsync(bool manual)
         {
             if (_busy) return;
+            if (!_cfg.OverlayEnabled)
+            {
+                // 关闭 OCR / 覆盖层后整条链路停用（自动轮询在 TickAsync 已拦，
+                // 这里兜住手动热键 / 托盘菜单的触发）
+                if (manual) SetStatus("覆盖层翻译（OCR）已关闭：设置 → 识别与区域 → 勾选「启用覆盖层翻译」");
+                return;
+            }
             if (_target == null || !_target.IsWindowAlive())
             {
                 if (!LocateTarget(true))
@@ -408,6 +423,11 @@ namespace AyuTranslate.Core
 
         public void ToggleOverlay()
         {
+            if (!_cfg.OverlayEnabled)
+            {
+                SetStatus("覆盖层翻译（OCR）已关闭：设置 → 识别与区域 → 勾选「启用覆盖层翻译」");
+                return;
+            }
             if (_overlay.OverlayVisible)
             {
                 _overlay.HideOverlay();
@@ -431,7 +451,9 @@ namespace AyuTranslate.Core
         {
             _autoMode = on;
             if (!on) CancelCurrent();
-            SetStatus(on ? "自动翻译：开启" : "自动翻译：关闭");
+            SetStatus(on
+                ? (_cfg.OverlayEnabled ? "自动翻译：开启" : "自动翻译：开启（覆盖层翻译已关闭，不会执行）")
+                : "自动翻译：关闭");
             AutoModeChanged?.Invoke(on);
         }
 

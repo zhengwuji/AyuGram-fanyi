@@ -280,6 +280,16 @@ namespace AyuTranslate.Core
         public int MinTextLength { get; set; } = 2;
 
         // ===== 运行 =====
+
+        /// <summary>
+        /// 覆盖层翻译总开关（截图 + OCR 识别那条链路）。
+        /// 默认关闭：只用「原生翻译接管」时不需要它，关掉可以省下
+        /// 周期性抓图 / OCR 的 CPU 开销。需要覆盖层时在设置里勾选开启。
+        /// 关闭后自动翻译、手动翻译热键、覆盖层显示全部停用；
+        /// 自检模式（--selftest / --overlaytest）不受影响。
+        /// </summary>
+        public bool OverlayEnabled { get; set; } = false;
+
         public bool StartWithOverlayVisible { get; set; } = true;
 
         /// <summary>自动模式轮询间隔（毫秒）。</summary>

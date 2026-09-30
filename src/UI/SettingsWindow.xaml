@@ -273,6 +273,15 @@
             <TabItem Header="识别与区域">
                 <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="14">
                     <StackPanel>
+                        <GroupBox Header="覆盖层翻译（OCR）">
+                            <StackPanel>
+                                <CheckBox x:Name="OverlayEnabledBox"
+                                          Content="启用覆盖层翻译（截图 + OCR 识别画面文字）"/>
+                                <TextBlock Style="{StaticResource Hint}" Margin="0,4,0,0"
+                                           Text="默认关闭：只用「原生翻译接管」时不需要它，关闭可省下周期性抓图 / OCR 的 CPU。关闭后自动翻译、手动翻译热键（Ctrl+Alt+T）、覆盖层显示全部停用；自检命令不受影响。"/>
+                            </StackPanel>
+                        </GroupBox>
+
                         <GroupBox Header="聊天区域（相对 AyuGram 窗口客户区，单位像素）">
                             <StackPanel>
                                 <CheckBox x:Name="RegionAutoBox" Content="自动推断聊天区域（推荐）" Checked="OnRegionAutoChanged" Unchecked="OnRegionAutoChanged"/>

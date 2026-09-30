@@ -204,7 +204,9 @@ OpenAI 兼容（DeepSeek / OpenAI / Ollama / LM Studio / vLLM / OneAPI / NewAPI�
 
 - **想要原生体验** → 走 [方式一](#方式一原生翻译接管推荐)，
   设置里点「打补丁」「启动代理」，然后在 AyuGram 里把翻译服务选成 Google
-- **不想改动客户端** → 走 [方式二](#方式二覆盖层翻译)，直接开自动翻译即可
+- **不想改动客户端** → 走 [方式二](#方式二覆盖层翻译)，
+  先到设置 → 识别与区域 → 勾选「**启用覆盖层翻译**」（默认关闭以节省 CPU），
+  再开自动翻译即可
 
 无论哪条路线，都建议先跑一次下面的自检确认 AI 接口通。
 
@@ -503,6 +505,7 @@ zh-Hans-CN, en-US, ja-JP, ko-KR, ru-RU
   "IncludeSidebar": false,
 
   // 运行
+  "OverlayEnabled": false,            // 覆盖层翻译总开关（截图+OCR 链路），只用原生接管时保持关闭
   "PollIntervalMs": 700,              // 抓取间隔
   "SkipUnchangedFrames": true,        // 画面没变就不重跑 OCR / 翻译
   "MinRequestIntervalMs": 350,        // 请求节流，防限流
@@ -815,6 +818,13 @@ TG-fanyi/
 ---
 
 ## 更新日志
+
+### v1.1.1（2026-09-30）
+
+- **覆盖层翻译默认关闭**：新增总开关「启用覆盖层翻译」（设置 → 识别与区域，配置项
+  `OverlayEnabled`，默认 `false`）。只用「原生翻译接管」时不再周期性抓图 / OCR，
+  CPU 占用显著下降。关闭后自动翻译、手动翻译热键（`Ctrl+Alt+T`）、覆盖层显隐全部停用；
+  需要覆盖层时勾选开启即可。自检命令（`--selftest` / `--overlaytest`）不受影响。
 
 ### v1.1.0（2026-09-30）
 
