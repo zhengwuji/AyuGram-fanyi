@@ -653,9 +653,21 @@ AyuGram 基于 Telegram Desktop，自带翻译功能，其后端在
 
 ```
 POST https://translate-pa.googleapis.com/v1/translateHtml
-X-Goog-Api-Key: AIzaSyATBXajvzQLTDHEQbcpq0Ihe0vWDHmO520
+X-Goog-Api-Key: <你的谷歌 API Key>
 [[["<原文>"],"auto","zh-CN"],"wt_lib"]
 ```
+
+> **关于这个 Key**：AyuGram 客户端在二进制里自带一个公开 key，请求时会随
+> `X-Goog-Api-Key` 头一起发来。本仓库**不在源码或配置里保存任何密钥**：
+> 谷歌兜底会按 环境变量 `AYU_GOOGLE_API_KEY` → 客户端请求头 → 空 的顺序解析。
+> 需要兜底时，请自备 key 并设成环境变量，例如：
+>
+> ```cmd
+> setx AYU_GOOGLE_API_KEY "<你的谷歌 API Key>"
+> ```
+>
+> 不设置也可以：此时只走你配置的 AI 后端（DeepSeek / OpenAI / DeepL …），
+> 或在设置里关闭「谷歌兜底」。
 
 该地址在二进制里是唯一的字符串常量，且请求是明文 HTTP，所以可以：
 改写地址 → 本地代理实现同协议 → 转发到自定义 AI。

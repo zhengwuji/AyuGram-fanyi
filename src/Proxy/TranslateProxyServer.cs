@@ -42,8 +42,30 @@ namespace AyuTranslate.Proxy
         /// <summary>AyuGram 原本使用的谷歌翻译接口（AI 失效时的兜底目标）。</summary>
         public const string GoogleOriginalUrl = "https://translate-pa.googleapis.com/v1/translateHtml";
 
-        /// <summary>AyuGram 源码里内置的公开谷歌 API Key（与客户端请求时发送的相同）。</summary>
-        public const string GoogleApiKey = "AIzaSyATBXajvzQLTDHEQbcpq0Ihe0vWDHmO520";
+        /// <summary>
+        /// 谷歌兜底使用的 API Key（.NET 版从未硬编码密钥，见 <see cref="ResolveGoogleApiKey"/>）。
+        ///
+        /// 说明：C++ 原版 AyuGram 客户端内部的 google.cpp 里带有一个公开 key，
+        /// 而 AyuGram 发往本代理的请求头里同样会带上 <c>X-Goog-Api-Key</c>。
+        /// 本代理**不**把任何密钥写进源码，只用下列顺序解析：
+        ///   1) 环境变量 <c>AYU_GOOGLE_API_KEY</c> / <c>AYUTRANSLATE_GOOGLE_API_KEY</c> / <c>GOOGLE_API_KEY</c>；
+        ///   2) 客户端请求自带的 <c>X-Goog-Api-Key</c> 头（默认路径，无需配置）；
+        ///   3) 都没有时用空串（谷歌会返回 403，请自备 key 或只用 AI 后端）。
+        /// </summary>
+        public static string ResolveGoogleApiKey(string clientSuppliedKey = null)
+        {
+            string[] names = { "AYU_GOOGLE_API_KEY", "AYUTRANSLATE_GOOGLE_API_KEY", "GOOGLE_API_KEY" };
+            foreach (string name in names)
+            {
+                try
+                {
+                    string v = Environment.GetEnvironmentVariable(name);
+                    if (!string.IsNullOrWhiteSpace(v)) return v.Trim();
+                }
+                catch { /* 环境变量不可读时继续 */ }
+            }
+            return string.IsNullOrWhiteSpace(clientSuppliedKey) ? "" : clientSuppliedKey.Trim();
+        }
 
         private AppConfig _cfg;
         private readonly int _port;
@@ -188,6 +210,10 @@ namespace AyuTranslate.Proxy
                         }
 
                         var parsed = ParseGoogleRequest(request.Body);
+                        // AyuGram 客户端请求里自带 X-Goog-Api-Key：仅在内存中借用它做兜底，
+                        // 绝不写进源码或配置文件。
+                        if (request.Headers.TryGetValue("X-Goog-Api-Key", out string hdrKey))
+                            parsed.ApiKey = hdrKey;
                         if (string.IsNullOrWhiteSpace(parsed.Text))
                         {
                             // 解析失败：谷歌认识自家协议，直接把原始请求转发过去试试
@@ -263,6 +289,9 @@ namespace AyuTranslate.Proxy
             public string Text;
             public string From = "auto";
             public string To = "zh-CN";
+
+            /// <summary>客户端请求头里带来的谷歌 key（用于兜底转发，不落盘、不硬编码）。</summary>
+            public string ApiKey;
         }
 
         /// <summary>
@@ -466,6 +495,15 @@ namespace AyuTranslate.Proxy
         {
             try
             {
+                // 密钥解析顺序：环境变量 → 客户端请求头。源码里不含任何密钥。
+                string googleKey = ResolveGoogleApiKey(parsed?.ApiKey);
+                if (string.IsNullOrWhiteSpace(googleKey))
+                {
+                    LastError = "谷歌兜底未配置 API Key（请设置环境变量 AYU_GOOGLE_API_KEY 或关闭兜底）";
+                    Log.Warn("代理：" + LastError);
+                    return null;
+                }
+
                 var (ok, body, err) = await Http.SendWithRetryAsync(
                     () =>
                     {
@@ -473,7 +511,7 @@ namespace AyuTranslate.Proxy
                         {
                             Content = new StringContent(rawBody, Encoding.UTF8, "application/json+protobuf"),
                         };
-                        req.Headers.TryAddWithoutValidation("X-Goog-Api-Key", GoogleApiKey);
+                        req.Headers.TryAddWithoutValidation("X-Goog-Api-Key", googleKey);
                         req.Headers.TryAddWithoutValidation("Accept", "application/json");
                         return req;
                     },
